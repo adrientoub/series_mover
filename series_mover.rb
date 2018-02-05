@@ -27,7 +27,12 @@ Dir.new(start_path).each do |filename|
     season = $2
     folder = "#{series_name}/Season #{season}/"
     FileUtils.mkdir_p(start_path + folder, options)
-    FileUtils.mv(start_path + filename, start_path + folder + filename, options)
+    dest = start_path + folder + filename
+    if File.exist?(dest)
+      logger.warn "#{dest} already exists"
+    else
+      FileUtils.mv(start_path + filename, dest, options)
+    end
   else
     logger.info "Ignored #{filename}"
   end
