@@ -4,7 +4,7 @@ require 'logger'
 require 'digest'
 
 if ARGV.empty?
-  $stderr.puts 'Usage: ./movefiles.rb [PATH]'
+  $stderr.puts 'Usage: ./series_mover.rb [PATH]'
   exit 1
 end
 
@@ -18,8 +18,18 @@ end
 if !ARGV[1].nil? && ARGV[1] == '-f'
   options = { verbose: true }
 end
+@logger_file = Logger.new('output.log', 'weekly')
+@logger_std = Logger.new(STDOUT)
 
-logger = Logger.new(STDOUT)
+def info(message)
+  @logger_file.info message
+  @logger_std.info message
+end
+
+def warn(message)
+  @logger_file.warn message
+  @logger_std.warn message
+end
 
 Dir.new(start_path).each do |filename|
   files << filename
@@ -31,20 +41,20 @@ Dir.new(start_path).each do |filename|
     source = start_path + filename
     dest = start_path + folder + filename
     if File.exist?(dest)
-      logger.warn "#{dest} already exists"
+      warn "#{dest} already exists"
       shadest = Digest::SHA256.file(dest).hexdigest
       shasource = Digest::SHA256.file(source).hexdigest
       if shadest == shasource
-        logger.warn "hash of file is #{shadest}"
+        warn "hash of file is #{shadest}"
         FileUtils.rm(source, options)
       else
-        logger.warn "sha256 are: #{shadest} #{shasource}"
+        warn "sha256 are: #{shadest} #{shasource}"
       end
     else
       FileUtils.mv(source, dest, options)
     end
   else
-    logger.info "Ignored #{filename}" unless File.directory?(start_path + filename)
+    info "Ignored #{filename}" unless File.directory?(start_path + filename)
   end
 end
 
